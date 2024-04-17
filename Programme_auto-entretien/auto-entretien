@@ -1,0 +1,74 @@
+// Définition des broches
+const int entreePin = 10; // Broche de l'entrée digitale
+const int sortiePin = 6; // Broche de sortie pour l'impulsion
+const int sortiePin2 = 4; // Broche de sortie pour l'impulsion
+const int motorPin3 = 9; //Broche de sortie pour le Pont en H
+const int motorPin4 = 8; //Broche de sortie pour le Pont en H
+const int periodePinOut = 5; // Broche de sortie du signal periodique
+
+// Variables pour le moteur
+int speed = 255;
+// Variables pour le suivi de l'état de l'entrée
+int etatEntreePrec = HIGH; // Stocke l'état précédent de l'entrée
+int etatEntree; // Stocke l'état actuel de l'entrée
+// Variables pour le signal periodique
+bool etatPeriode = LOW; // État actuel du signal periodique
+
+// Variables pour la temporisation de l'impulsion et de la temporisation avant impulsion
+unsigned long tempsDebutTempo = 0; // Stocke le temps de début de la temporisation avant impulsion
+unsigned long tempsDebutTempo2 = 0; // Stocke le temps de début de la temporisation avant impulsion
+unsigned long tempsDebutImpulsion = 0; // Stocke le temps de début de l'impulsion
+unsigned long tempsDebutImpulsion2 = 0; // Stocke le temps de début de l'impulsion
+const unsigned long dureeTempo = 2500; // Durée de la temporisation avant impulsion en millisecondes
+const unsigned long dureeTempo2 = 40; // Durée de la temporisation avant impulsion en millisecondes
+const unsigned long dureeImpulsion = 1500; // Durée de l'impulsion en millisecondes
+const unsigned long dureeImpulsion2 = 1500; // Durée de l'impulsion en millisecondes
+
+void setup() {
+  // Configuration des broches
+  pinMode(entreePin, INPUT);
+  pinMode(sortiePin, OUTPUT);
+  pinMode(sortiePin2, OUTPUT);
+  pinMode(motorPin3, OUTPUT);
+  pinMode(motorPin4, OUTPUT);
+}
+
+void loop() {
+  // Lecture de l'état de l'entrée
+  etatEntree = digitalRead(entreePin);
+  digitalWrite(periodePinOut, etatPeriode);
+  // Si l'état de l'entrée est différent de l'état précédent
+  if (etatEntree != etatEntreePrec) {
+    // Si l'entrée est active (changement d'état de HIGH à LOW)
+    if (etatEntree == LOW) {
+      // Démarrer la temporisation avant impulsion
+      tempsDebutTempo = millis();
+      tempsDebutTempo2 = millis();
+      etatPeriode = !etatPeriode;
+    }
+    // Mémoriser l'état de l'entrée pour la prochaine itération
+    etatEntreePrec = etatEntree;
+  }
+
+  // Si la temporisation avant impulsion est terminée
+  if (millis() - tempsDebutTempo >= dureeTempo) {
+    // Démarrer l'impulsion
+    if (millis() - tempsDebutTempo < dureeTempo + dureeImpulsion) {
+      digitalWrite(sortiePin, HIGH); // Active l'impulsion
+      analogWrite(motorPin3, speed);
+    } else {
+      digitalWrite(sortiePin, LOW); // Désactive l'impulsion
+      analogWrite(motorPin3, 0);
+    }
+  }
+  if (millis() - tempsDebutTempo2 >= dureeTempo2) {
+    // Démarrer l'impulsion
+    if (millis() - tempsDebutTempo2 < dureeTempo2 + dureeImpulsion2) {
+      digitalWrite(sortiePin2, HIGH); // Active l'impulsion
+      analogWrite(motorPin4, speed);
+    } else {
+      digitalWrite(sortiePin2, LOW); // Désactive l'impulsion
+      analogWrite(motorPin4, 0);
+    }
+  }
+}

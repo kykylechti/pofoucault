@@ -57,7 +57,7 @@
 #define OLLATA 0x14  // Output latch. Write to latch output.
 #define OLLATB 0x15
 
-#define NUM_LEDS 24
+#define NUM_LEDS 360
 #define R 255
 #define G 150
 #define B 0
@@ -101,6 +101,9 @@ int index = -1;
 int iteration = 0;
 int add_led = 0;
 bool decompte = false;
+const int motorPin1 = 9; //Out 1 relié à In3 sur le pont en H
+const int motorPin2 = 8; //Out 2 relié à In4 sur le pont en H
+const int bobinePin = 13;
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
 //----------------------------------------------------------------Création des Objets-----------------------------------------------------------------------//
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -145,31 +148,10 @@ int sensorLED() {
   return Actual_Mult * 8 + Actual_Board * 12 + Actual_Sensor;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Fonction permettant de tester la détection d'un capteur et la modification du capteur à chercher
-int sensorDetection(int sens, int board, int mult) {
-  TCA9548A(mult);
-  int pinState = mcp[board].digitalRead(sens);
-  if (pinState == 0) {
-    Actual_Sensor = sens;
-    Actual_Board = board;
-    Actual_Mult = mult;
-  }
-  return pinState;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fonction permettant de lancer un compteur
 void wait() {
   waitTime = millis();
   decompte = true;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Fonction permettant d'identifier le PIN d'interruption
-int pinSearch(){
-  int res = 0;
-  for(int i = 8; i<=11; i++){
-    if(digitalRead(i)==0){res = i;}
-  }
-  return res;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fonction permettant d'associer la couleur à un chiffre
@@ -251,7 +233,6 @@ void bob_plus(){
   digitalWrite(motorPin1, 180);
   digitalWrite(motorPin2, 0);
   Serial.println("Bobine dans le sens +");
-  status = 1;
 }
 
 //Fonction permettant d'éteindre la bobine
@@ -259,9 +240,37 @@ void bobOff(){
   digitalWrite(motorPin1, 0);
   digitalWrite(motorPin2, 0);
   Serial.println("Bobine à l'arrêt");
-  status = 0;
 }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Création de la fonction snake permettant l'affichage des LEDs sous la forme d'un serpent
+void snake(int color, int size) {
+  float fade_increment = 0.7;
+  int adjustedR = R;
+  int adjustedG = G;
+  int adjustedB = B;
+  int posLed = AddLED(color, Actual_Sensor, Actual_Board);
+  strip.setPixelColor(posLed, strip.Color(R, G, B));
+  strip.setPixelColor(position(posLed, 180), strip.Color(R, G, B));
+  for (int i = 1; i < size; i++) {
+    adjustedR = fade_increment * adjustedR;
+    adjustedG = fade_increment * adjustedG;
+    adjustedB = fade_increment * adjustedB;
+    strip.setPixelColor(position(posLed, -i), strip.Color(adjustedR, adjustedG, adjustedB));
+    strip.setPixelColor(position(posLed, 180-i), strip.Color(adjustedR, adjustedG, adjustedB));
+  }
+  strip.show();
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Fonction donnant la position que l'on souhaite modifier pour la LED, en fonction de déplacement souhaité
+int position(int n, int d) {
+  if (n + d > NUMPIXELS - 1) {
+    return n + d - NUMPIXELS;
+  } else if (n + d < 0) {
+    return NUMPIXELS + n + d;
+  } else {
+    return n + d;
+  }
+}
 //**********************************************************************************************************************************************************//
 //********************************************************************* SETUP ******************************************************************************//
 //**********************************************************************************************************************************************************//
@@ -547,6 +556,7 @@ void setup() {
   expanderRead(MCP23017_ADDRESS_5, INTCAPA);
   expanderRead(MCP23017_ADDRESS_5, INTCAPB); 
 
+
   TCA9548A(6);
   Adafruit_MCP23X17 mcpTest1;
   mcpTest1.begin_I2C(MCP23017_ADDRESS_7);
@@ -595,6 +605,8 @@ void setup() {
   
   pinMode(motorPin1, OUTPUT);
   pinMode(motorPin2, OUTPUT);
+  pinMode(bobinePin, OUTPUT);
+  digitalWrite(bobinePin, HIGH);
 }
 //**********************************************************************************************************************************************************//
 //******************************************************************** LOOP ********************************************************************************//
@@ -623,13 +635,8 @@ void loop()
 
   if(InterruptFound && ( InterruptColor!= 99))
   {
-    if(decompte){
-      Serial.println();
-      Serial.println(millis()-waitTime);
-      decompte = false;
-    }
-    wait();
-     switch(InterruptColor)
+    digitalWrite(bobinePin, LOW);
+    switch(InterruptColor)
     {                // Lecture du pin d'interruption permettant de capter un changement d'état dans l'une des cartes
       case 3 :
         color = "green";
@@ -709,10 +716,10 @@ void loop()
     TCA9548A(Actual_Mult); 
     int value1 = expanderRead(tabAdress[Actual_Board], INTFA);
     expanderRead(tabAdress[Actual_Board], INTCAPA);
-    delay(50);
+    delay(10);
     int value2 = expanderRead(tabAdress[Actual_Board], INTFB);
     expanderRead(tabAdress[Actual_Board], INTCAPB);
-    delay(50);
+    delay(10);
     
     /*expanderRead(tabAdress[Actual_Board], INTCAPA);
     delay(50);
@@ -759,7 +766,8 @@ void loop()
       expanderRead(MCP23017_ADDRESS_7, INTCAPB); */
       strip.clear();
       delay(100);
-      for(iteration=0;iteration<360;iteration++)
+      
+      /*for(iteration=0;iteration<360;iteration++)
       {
         if(Historique[iteration] >0)
         {
@@ -769,10 +777,10 @@ void loop()
         }
       }
       add_led = AddLED(colorInt(color),Actual_Sensor, Actual_Board);
-      strip.setPixelColor(add_led, 15, 15, 15); //85*3
-       Historique[add_led] = 15;
-      strip.show();
-      
+      strip.setPixelColor(add_led, 255, 255, 255); //85*3
+       Historique[add_led] = 255;
+      strip.show();*/
+      snake(colorInt(color), 20);
           for(int k;k<8;k++)
       {
         TCA9548A(0);
@@ -797,9 +805,8 @@ void loop()
       
     }
     //    Serial.println(InterruptFound);
-    //Serial.println(InterruptColor);
+    //    Serial.println(InterruptColor);
     //    Serial.println(add_led);
-       
     InterruptFound = false;
     InterruptColor = 99;
   }

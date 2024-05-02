@@ -65,7 +65,7 @@ unsigned long dureeTempo = 2500; // Durée de la temporisation avant impulsion e
 unsigned long dureeTempo2 = 40; // Durée de la temporisation avant impulsion en millisecondes
 unsigned long dureeImpulsion = 1500; // Durée de l'impulsion en millisecondes
 unsigned long dureeImpulsion2 = 1500; // Durée de l'impulsion en millisecondes
-const unsigned long waitTime = 50; // Durée minimale requise entre 2 détections
+const unsigned long waitTime = 1000; // Durée minimale requise entre 2 détections
 unsigned long time = 0; // Temps au moment d'une detection
 
 bool inter = false;
@@ -92,15 +92,15 @@ void desactive_impulsion_repulsion(){
   analogWrite(motorPin4, 0);
 }
 
-//Lorsqu'une interruption est détectée, on change cette variable afin de permettre de 
-//rentrer dans le code et lancer les timers
+//Lorsqu'une interruption est détectée, on change cette variable afin de permettre de rentrer dans le code et lancer les
+//timers seulement si il s'est écoulé plus de 1 seconde depuis la dernière détection afin de détecter le pendule en entrée
 void detected(){
-  inter = true;
+  inter = true;        //Variable permettant de rentrer dans la loop
   if(millis()-time>waitTime){
     tempsDebutTempo = millis();
     tempsDebutTempo2 = millis();
   }
-  time = millis();
+  time = millis();      //Timer entre 2 détections
 }
 
 //Fonction permettant de recalculer le temps de l'impulsion en fonction du potentiomètre

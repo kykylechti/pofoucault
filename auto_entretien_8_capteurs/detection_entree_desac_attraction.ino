@@ -177,26 +177,27 @@ void setup() {
 
 void loop() {
   //On entre dans le code qu'en cas de détection sur un capteur
+  if(millis()-time<10000){
+    desactive_impulsion_attraction();
+  }
   if(inter){
-    //Réactualisation des variables de temporisation
-    calculImpuls();
-    // Si la temporisation avant impulsion est terminée
-    if (millis() - tempsDebutTempo >= dureeTempo) {
-      // Démarrer l'impulsion
-      if (millis() - tempsDebutTempo < dureeTempo + dureeImpulsion) {
+    while(millis()-time<4000){
+      //Réactualisation des variables de temporisation à partir du potentiomètre
+      calculImpuls();
+      // Si la temporisation avant impulsion est terminée
+      if (millis() - tempsDebutTempo >= dureeTempo) {
+        // Démarrer l'impulsion
         active_impulsion_attraction();
-      } else {
-        desactive_impulsion_attraction();
+      }
+      if (millis() - tempsDebutTempo2 >= dureeTempo2) {
+        // Démarrer l'impulsion
+        if (millis() - tempsDebutTempo2 < dureeTempo2 + dureeImpulsion2) {
+          active_impulsion_repulsion();
+        } else {
+          desactive_impulsion_repulsion();
+        }
       }
     }
-    if (millis() - tempsDebutTempo2 >= dureeTempo2) {
-      // Démarrer l'impulsion
-      if (millis() - tempsDebutTempo2 < dureeTempo2 + dureeImpulsion2) {
-        active_impulsion_repulsion();
-      } else {
-        desactive_impulsion_repulsion();
-        inter = false;
-      }
-    }
+    inter = false;
   }
 }

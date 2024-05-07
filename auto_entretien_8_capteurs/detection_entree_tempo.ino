@@ -96,14 +96,14 @@ void desactive_impulsion_repulsion(){
 //timers seulement si il s'est écoulé plus de 1 seconde depuis la dernière détection afin de détecter le pendule en entrée
 void detected(){
   inter = true;        //Variable permettant de rentrer dans la loop
-  if(millis()-time>waitTime){
+  if(millis()-time>waitTime){      //On ne lancer les timers que si la dernière détection date de plus de 1000ms
     tempsDebutTempo = millis();
     tempsDebutTempo2 = millis();
   }
-  time = millis();      //Timer entre 2 détections
+  time = millis();      //Timer entre 2 détections afin d'éviter de détecter l'entrée et la sortie
 }
 
-//Fonction permettant de recalculer le temps de l'impulsion en fonction du potentiomètre
+//Fonction permettant de recalculer le temps de l'impulsion en fonction du potentiomètre, on modifie aussi la temporisation, pour que la temporisation totale corresponde à une période
 void calculImpuls(){
   float coef = analogRead(potPin);
   dureeImpulsion = (1500/1023) * coef;
@@ -156,7 +156,7 @@ void setup() {
   //Configuration du potentiomètre 
   pinMode(potPin, INPUT);
 
-  //Configuration des capteurs en mode interruption
+  //Configuration des capteurs en mode interruption afin de rentrer dans le code
   attachInterrupt(digitalPinToInterrupt(pinBoard), detected, FALLING);
 
   attachInterrupt(digitalPinToInterrupt(pin1), detected, FALLING);
@@ -195,7 +195,7 @@ void loop() {
         active_impulsion_repulsion();
       } else {
         desactive_impulsion_repulsion();
-        inter = false;
+        inter = false;    //On réinitialise la varible d'entrée pour éviter de lancer la loop une nouvelle fois
       }
     }
   }
